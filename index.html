@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tumhare Liye 💌</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Kalam:wght@300;400;700&family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #e8457a;
+    --blush: #f7b8cc;
+    --petal: #fde8f0;
+    --deep: #c0294f;
+    --ivory: #fff5f8;
+    --gold: #d4a853;
+    --text: #3d1a26;
+    --muted: #9e5570;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ivory);
+    font-family: 'Kalam', cursive;
+    color: var(--text);
+    overflow-x: hidden;
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ctext y='20' font-size='20'%3E🌸%3C/text%3E%3C/svg%3E"), auto;
+  }
+
+  /* ── PETALS BACKGROUND ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(247,184,204,0.35) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(232,69,122,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(253,232,240,0.5) 0%, transparent 80%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── FLOATING HEARTS CANVAS ── */
+  #heartCanvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── BUBBLE CANVAS ── */
+  #bubbleCanvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 1s ease;
+  }
+
+  #bubbleCanvas.visible { opacity: 1; }
+
+  /* ── ENVELOPE INTRO ── */
+  #envelope-screen {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(135deg, #f7b8cc 0%, #e8457a 50%, #c0294f 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  #envelope-screen.hidden {
+    opacity: 0;
+    transform: translateY(-100vh);
+    pointer-events: none;
+  }
+
+  .envelope-wrap {
+    position: relative;
+    width: 260px;
+    height: 180px;
+    cursor: pointer;
+    filter: drop-shadow(0 20px 60px rgba(80,0,30,0.4));
+    transition: transform 0.3s ease;
+  }
+
+  .envelope-wrap:hover { transform: scale(1.06) rotate(-1deg); }
+
+  .env-body {
+    width: 100%;
+    height: 100%;
+    background: #fff0f5;
+    border-radius: 4px 4px 12px 12px;
+    position: relative;
+    overflow: hidden;
+    border: 2px solid #f7b8cc;
+  }
+
+  .env-flap {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    clip-path: polygon(0 0, 50% 55%, 100% 0);
+    background: linear-gradient(160deg, #fde8f0, #f7b8cc);
+    transform-origin: top center;
+    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+    border-bottom: 2px solid #e8457a;
+  }
+
+  .envelope-wrap:hover .env-flap {
+    transform: rotateX(-160deg);
+  }
+
+  .env-bottom-left {
+    position: absolute;
+    bottom: 0; left: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 0 90px 130px;
+    border-color: transparent transparent #fbd5e5 transparent;
+  }
+
+  .env-bottom-right {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 0; height: 0;
+    border-style: solid;
+    border-width: 0 130px 90px 0;
+    border-color: transparent #fbd5e5 transparent transparent;
+  }
+
+  .env-heart {
+    position: absolute;
+    top: 55%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.4rem;
+    animation: heartbeat 1.2s ease-in-out infinite;
+  }
+
+  @keyframes heartbeat {
+    0%,100% { transform: translate(-50%,-50%) scale(1); }
+    50% { transform: translate(-50%,-50%) scale(1.2); }
+  }
+
+  .open-hint {
+    margin-top: 30px;
+    color: white;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    animation: pulse 2s ease-in-out infinite;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  @keyframes pulse {
+    0%,100% { opacity: 0.7; }
+    50% { opacity: 1; }
+  }
+
+  /* ── LETTER CONTAINER ── */
+  #letter-container {
+    position: relative;
+    z-index: 10;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 20px 100px;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 1.2s ease, transform 1.2s ease;
+  }
+
+  #letter-container.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── PAPER ── */
+  .letter-paper {
+    background: linear-gradient(170deg, #fff8fa 0%, #fff0f5 60%, #fde8f0 100%);
+    border-radius: 20px;
+    padding: 60px 56px;
+    box-shadow:
+      0 4px 0 #f7b8cc,
+      0 8px 0 #f0a4bd,
+      0 30px 80px rgba(200,50,100,0.15),
+      inset 0 0 60px rgba(247,184,204,0.2);
+    border: 1.5px solid rgba(247,184,204,0.6);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* ruled lines */
+  .letter-paper::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+      transparent,
+      transparent 38px,
+      rgba(247,184,204,0.25) 38px,
+      rgba(247,184,204,0.25) 39px
+    );
+    background-position: 0 72px;
+    border-radius: 20px;
+    pointer-events: none;
+  }
+
+  /* decorative corner roses */
+  .letter-paper::after {
+    content: '🌹';
+    position: absolute;
+    top: 18px; right: 22px;
+    font-size: 2rem;
+    opacity: 0.35;
+    transform: rotate(15deg);
+  }
+
+  /* ── HEADER ── */
+  .letter-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+
+  .letter-date {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1rem;
+    color: var(--muted);
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .letter-to {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.6rem;
+    color: var(--deep);
+    line-height: 1.1;
+    text-shadow: 2px 3px 10px rgba(192,41,79,0.2);
+  }
+
+  .heart-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px auto;
+    justify-content: center;
+  }
+
+  .heart-divider::before,
+  .heart-divider::after {
+    content: '';
+    height: 1.5px;
+    width: 80px;
+    background: linear-gradient(to right, transparent, var(--blush));
+  }
+
+  .heart-divider::after {
+    background: linear-gradient(to left, transparent, var(--blush));
+  }
+
+  /* ── BODY TEXT ── */
+  .para {
+    font-family: 'Kalam', cursive;
+    font-size: 1.18rem;
+    line-height: 2.2rem;
+    color: var(--text);
+    margin-bottom: 32px;
+    position: relative;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .para.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* ── SHAYARI BLOCKS ── */
+  .shayari {
+    background: linear-gradient(135deg, rgba(232,69,122,0.08), rgba(247,184,204,0.2));
+    border-left: 4px solid var(--rose);
+    border-radius: 0 16px 16px 0;
+    padding: 22px 28px;
+    margin: 36px 0;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 1.15rem;
+    line-height: 2;
+    color: var(--deep);
+    text-align: center;
+    position: relative;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+  }
+
+  .shayari.revealed {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .shayari::before {
+    content: '❝';
+    font-size: 3rem;
+    color: var(--rose);
+    opacity: 0.3;
+    position: absolute;
+    top: -8px;
+    left: 14px;
+    font-family: serif;
+    line-height: 1;
+  }
+
+  /* ── MEMORY CARD ── */
+  .memory-card {
+    background: white;
+    border: 2px dashed var(--blush);
+    border-radius: 16px;
+    padding: 24px 28px;
+    margin: 32px 0;
+    position: relative;
+    box-shadow: 4px 4px 20px rgba(232,69,122,0.08);
+    opacity: 0;
+    transform: scale(0.96);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .memory-card.revealed {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  .memory-label {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.1rem;
+    color: var(--rose);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── EMOJI HIGHLIGHT ── */
+  .emoji-highlight {
+    display: inline-block;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%,100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* ── SPECIAL TRAITS ── */
+  .traits-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 28px 0;
+    opacity: 0;
+    transition: opacity 0.8s ease;
+  }
+
+  .traits-grid.revealed { opacity: 1; }
+
+  .trait-chip {
+    background: linear-gradient(135deg, var(--petal), white);
+    border: 1.5px solid var(--blush);
+    border-radius: 50px;
+    padding: 12px 18px;
+    font-size: 0.95rem;
+    color: var(--deep);
+    text-align: center;
+    box-shadow: 2px 2px 12px rgba(232,69,122,0.08);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .trait-chip:hover {
+    transform: translateY(-3px);
+    box-shadow: 4px 8px 20px rgba(232,69,122,0.18);
+  }
+
+  /* ── CLOSING ── */
+  .letter-closing {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 36px;
+    border-top: 1.5px solid rgba(247,184,204,0.5);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 1s ease, transform 1s ease;
+  }
+
+  .letter-closing.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .closing-line {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.9rem;
+    color: var(--deep);
+    line-height: 1.6;
+  }
+
+  .final-line {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--rose);
+    margin-top: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-shadow: 2px 3px 12px rgba(232,69,122,0.25);
+  }
+
+  .signature {
+    margin-top: 32px;
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.3rem;
+    color: var(--muted);
+  }
+
+  .signature span {
+    font-size: 1.6rem;
+    color: var(--rose);
+    display: block;
+    margin-top: 6px;
+  }
+
+  /* ── SCROLL PROGRESS ── */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--blush), var(--rose), var(--deep));
+    z-index: 999;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px rgba(232,69,122,0.5);
+  }
+
+  /* ── FLOATING ROSE ── */
+  .floating-rose {
+    position: fixed;
+    font-size: 1.5rem;
+    opacity: 0;
+    animation: roseFloat linear forwards;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  @keyframes roseFloat {
+    0% { opacity: 0; transform: translateY(0) rotate(0deg); }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-100vh) rotate(360deg); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .letter-paper { padding: 36px 24px; }
+    .letter-to { font-size: 2rem; }
+    .traits-grid { grid-template-columns: 1fr; }
+    .shayari { font-size: 1rem; }
+    .para { font-size: 1.05rem; line-height: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Progress bar -->
+<div id="progress-bar" style="width:0%"></div>
+
+<!-- Canvases -->
+<canvas id="heartCanvas"></canvas>
+<canvas id="bubbleCanvas"></canvas>
+
+<!-- Envelope screen -->
+<div id="envelope-screen">
+  <div class="envelope-wrap" id="openBtn">
+    <div class="env-body">
+      <div class="env-flap"></div>
+      <div class="env-bottom-left"></div>
+      <div class="env-bottom-right"></div>
+      <div class="env-heart">💌</div>
+    </div>
+  </div>
+  <p class="open-hint">✨ Tap to open your letter ✨</p>
+</div>
+
+<!-- Letter -->
+<div id="letter-container">
+  <div class="letter-paper">
+
+    <!-- Header -->
+    <div class="letter-header">
+      <div class="letter-date">🌸 Dil ki gehraiyyon se... 🌸</div>
+      <div class="letter-to">Meri Jaan, Meri Duniya,<br>Sirf Tum... 💕</div>
+      <div class="heart-divider">💗</div>
+    </div>
+
+    <!-- Para 1 – Opening -->
+    <div class="para" data-reveal>
+      Pata nahi kahan se shuru karun, kyunki mere saare alfaaz bhi chhote pad jaate hain jab baat tumhari hoti hai.
+      Phir bhi, aaj yeh dil jo feel kar raha hai, woh tumhare liye likhna chahta hai —
+      bina kisi darrr ke, bina kisi sharam ke... bas seedha dil se. <span class="emoji-highlight">🫀</span>
+    </div>
+
+    <!-- Shayari 1 -->
+    <div class="shayari" data-reveal>
+      "Kuch alfaaz hote hain jo likhne se pehle mehsoos kiye jaate hain,<br>
+      Kuch log hote hain jo milne se pehle dil mein bas jaate hain —<br>
+      Tum wahi ho, mere liye."
+    </div>
+
+    <!-- Para 2 – First meeting memory -->
+    <div class="memory-card" data-reveal>
+      <div class="memory-label">📍 Yaad hai woh pehli mulaqaat...</div>
+      Woh din aaj bhi aankhon mein taaza hai — jab pehli baar tumhe dekha tha.
+      Tumhara woh andaaz, woh muskaan jo befikr thi aur anjaane mein hi dil pe chhap gayi.
+      Mujhe nahi pata tha ki woh ek pal meri zindagi ka sabse khoobsurat mod ban jaayega.
+      Log kehte hain pehli nazar mein pyaar nahi hota — par shayad woh tumse nahi mile the. 🌹
+    </div>
+
+    <!-- Para 3 – What makes her special -->
+    <div class="para" data-reveal>
+      Tum alag ho — har us insaan se jo maine pehle jaana. Tumhari aankhon mein ek aisa
+      ujala hai jo meri sabse andheri shaam ko bhi roshan kar deta hai.
+      Tumhari hassi mein ek jaadu hai — sunkar lagta hai ki duniya sab theek kar degi.
+      Tumhari baat sunna mujhe sikhata hai ki khamoshi mein bhi kitna kuch bola jaata hai.
+    </div>
+
+    <!-- Traits grid -->
+    <div class="traits-grid" data-reveal>
+      <div class="trait-chip">✨ Teri ek muskaan — meri poori duniya</div>
+      <div class="trait-chip">🌸 Teri awaaz — mera sabse meetha gaana</div>
+      <div class="trait-chip">💫 Tera gussa — meri sabse pyaari adaa</div>
+      <div class="trait-chip">🌙 Teri yaad — meri neend ka sabab</div>
+    </div>
+
+    <!-- Shayari 2 -->
+    <div class="shayari" data-reveal>
+      "Tum sirf chehra nahi ho mere liye,<br>
+      Tum ek ehsaas ho jo roz naya rehta hai —<br>
+      Jaise subah ki pehli roshni, jaise baarish ki pehli boond."
+    </div>
+
+    <!-- Para 4 – How she changed his life -->
+    <div class="para" data-reveal>
+      Tumse milne ke baad mujhe pata chala ki main kitna adhura tha.
+      Tumne mujhe sikhaya ki dard ke peeche bhi khubsoorti hoti hai,
+      ki chup rehna bhi ek tarah ki baat hoti hai, ki har roz sirf tumhari ek jhilak
+      hi kaafi hai khush rehne ke liye. <span class="emoji-highlight">🌺</span> Tumne mujhe better insaan banaya —
+      bina kuch kahe, bas tumhare hone se.
+    </div>
+
+    <!-- Memory card 2 – Future dreams -->
+    <div class="memory-card" data-reveal>
+      <div class="memory-label">🌟 Sapne jo sirf tumhare saath dekhta hun...</div>
+      Ek din hum saath baithe chai piyenge — chhoti si balcony par, jab baarish ho rahi hogi.
+      Hum zyada nahi bolenge — bas ek doosre ko dekhenge aur muskurayenge.
+      Us raat hum taare ginenge aur main toh seedha tum par ungali rakhuunga aur kahuunga —
+      "Yeh mera sabse pyaara taara hai." 🌠<br><br>
+      Tum meri har subah ka pehla khyaal ho aur raat ka aakhri dua.
+      Main chahta hun ki hum saath grow karein, saath thokrein khaayein, saath sambhalein —
+      kyunki tumhare saath mushkilein bhi khoobsurat lagti hain.
+    </div>
+
+    <!-- Shayari 3 -->
+    <div class="shayari" data-reveal>
+      "Na maangta hun asmaan, na daulat, na koi badi khushi —<br>
+      Bas chaahiye mujhe ek kasam, ek wada, tum —<br>
+      Zindagi bhar ke liye, sirf meri."
+    </div>
+
+    <!-- Para 5 – Emotional -->
+    <div class="para" data-reveal>
+      Main jaanta hun main perfect nahi hun. Kabhi ghabra jaata hun, kabhi kuch samajh
+      nahi paata, kabhi galat bhi keh deta hun. Par yeh jaanta hun ki jab bhi tum saath
+      hoti ho, sab kuch theek ho jaata hai. Tumhari aawaz sunke dil ko chain milta hai jo
+      shehar ki koi bhi shaam nahi de paati. <span class="emoji-highlight">💞</span>
+    </div>
+
+    <!-- Closing section -->
+    <div class="letter-closing" data-reveal>
+      <div class="closing-line">
+        Yeh dil, yeh saanson ka safar,<br>
+        yeh zindagi — sab tere liye hai. <span class="emoji-highlight">🌹</span>
+      </div>
+      <div class="final-line">
+        तुम हमेशा मेरी रहोगी ❤️
+      </div>
+      <div class="signature">
+        Tumhara —
+        <span>Tera Hi Deewaana 💌</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ── ENVELOPE OPEN ── */
+document.getElementById('openBtn').addEventListener('click', () => {
+  document.getElementById('envelope-screen').classList.add('hidden');
+  setTimeout(() => {
+    document.getElementById('letter-container').classList.add('visible');
+    startHeartsAnimation();
+    revealFirst();
+  }, 800);
+});
+
+/* ── SCROLL PROGRESS + BUBBLE TRIGGER ── */
+window.addEventListener('scroll', () => {
+  const scrollTop = document.documentElement.scrollTop;
+  const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = (scrollTop / scrollHeight) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+
+  // Bubbles appear after 20% scroll
+  if (progress > 20) {
+    document.getElementById('bubbleCanvas').classList.add('visible');
+    if (!bubblesActive) {
+      bubblesActive = true;
+      spawnBubbles();
+      animateBubbles();
+    }
+  } else {
+    document.getElementById('bubbleCanvas').classList.remove('visible');
+  }
+
+  revealOnScroll();
+});
+
+/* ── REVEAL ON SCROLL ── */
+function revealFirst() {
+  const items = document.querySelectorAll('[data-reveal]');
+  if (items.length > 0) items[0].classList.add('revealed');
+}
+
+function revealOnScroll() {
+  const items = document.querySelectorAll('[data-reveal]:not(.revealed)');
+  items.forEach(el => {
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 0.88) {
+      el.classList.add('revealed');
+    }
+  });
+}
+
+/* ── CANVAS SETUP (declare all first) ── */
+const heartCanvas = document.getElementById('heartCanvas');
+const hCtx = heartCanvas.getContext('2d');
+const bubbleCanvas = document.getElementById('bubbleCanvas');
+const bCtx = bubbleCanvas.getContext('2d');
+let hearts = [];
+let bubbles = [];
+let bubblesActive = false;
+
+function resizeCanvases() {
+  heartCanvas.width = window.innerWidth;
+  heartCanvas.height = window.innerHeight;
+  bubbleCanvas.width = window.innerWidth;
+  bubbleCanvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvases);
+resizeCanvases();
+
+function startHeartsAnimation() {
+  setInterval(spawnHeart, 1800);
+  animateHearts();
+}
+
+function spawnHeart() {
+  hearts.push({
+    x: Math.random() * heartCanvas.width,
+    y: heartCanvas.height + 20,
+    size: 12 + Math.random() * 18,
+    speed: 0.5 + Math.random() * 1,
+    opacity: 0.6 + Math.random() * 0.4,
+    drift: (Math.random() - 0.5) * 0.8,
+    wobble: Math.random() * Math.PI * 2,
+  });
+}
+
+function drawHeart(ctx, x, y, size, opacity) {
+  ctx.save();
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = `hsl(${340 + Math.random() * 20}, 80%, ${60 + Math.random() * 20}%)`;
+  ctx.beginPath();
+  ctx.moveTo(x, y + size * 0.35);
+  ctx.bezierCurveTo(x, y, x - size * 0.5, y, x - size * 0.5, y + size * 0.35);
+  ctx.bezierCurveTo(x - size * 0.5, y + size * 0.7, x, y + size, x, y + size);
+  ctx.bezierCurveTo(x, y + size, x + size * 0.5, y + size * 0.7, x + size * 0.5, y + size * 0.35);
+  ctx.bezierCurveTo(x + size * 0.5, y, x, y, x, y + size * 0.35);
+  ctx.fill();
+  ctx.restore();
+}
+
+function animateHearts() {
+  hCtx.clearRect(0, 0, heartCanvas.width, heartCanvas.height);
+  hearts = hearts.filter(h => h.y > -50);
+  hearts.forEach(h => {
+    h.wobble += 0.04;
+    h.x += Math.sin(h.wobble) * h.drift;
+    h.y -= h.speed;
+    drawHeart(hCtx, h.x, h.y, h.size, h.opacity * (1 - (heartCanvas.height - h.y) / heartCanvas.height));
+  });
+  requestAnimationFrame(animateHearts);
+}
+
+/* ── BUBBLES (scroll-triggered) ── */
+
+function spawnBubbles() {
+  for (let i = 0; i < 18; i++) {
+    bubbles.push(createBubble());
+  }
+  setInterval(() => {
+    if (bubbles.length < 40) bubbles.push(createBubble());
+  }, 600);
+}
+
+function createBubble() {
+  const colors = ['rgba(232,69,122,', 'rgba(247,184,204,', 'rgba(253,232,240,', 'rgba(212,168,83,'];
+  const col = colors[Math.floor(Math.random() * colors.length)];
+  return {
+    x: Math.random() * bubbleCanvas.width,
+    y: Math.random() * bubbleCanvas.height + bubbleCanvas.height,
+    r: 8 + Math.random() * 30,
+    speed: 0.4 + Math.random() * 1.2,
+    opacity: 0.15 + Math.random() * 0.4,
+    drift: (Math.random() - 0.5) * 1.5,
+    wobble: Math.random() * Math.PI * 2,
+    color: col,
+  };
+}
+
+function animateBubbles() {
+  bCtx.clearRect(0, 0, bubbleCanvas.width, bubbleCanvas.height);
+  bubbles = bubbles.filter(b => b.y > -60);
+  bubbles.forEach(b => {
+    b.wobble += 0.025;
+    b.x += Math.sin(b.wobble) * b.drift;
+    b.y -= b.speed;
+
+    // Draw bubble
+    bCtx.save();
+    bCtx.globalAlpha = b.opacity;
+    const grad = bCtx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.1, b.x, b.y, b.r);
+    grad.addColorStop(0, b.color + '0.7)');
+    grad.addColorStop(0.5, b.color + '0.3)');
+    grad.addColorStop(1, b.color + '0.05)');
+    bCtx.beginPath();
+    bCtx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    bCtx.fillStyle = grad;
+    bCtx.fill();
+    // Shine
+    bCtx.globalAlpha = b.opacity * 0.7;
+    bCtx.beginPath();
+    bCtx.arc(b.x - b.r * 0.32, b.y - b.r * 0.32, b.r * 0.22, 0, Math.PI * 2);
+    bCtx.fillStyle = 'rgba(255,255,255,0.8)';
+    bCtx.fill();
+    bCtx.restore();
+  });
+
+  if (bubblesActive) requestAnimationFrame(animateBubbles);
+}
+
+/* ── FLOATING ROSE PETALS on click ── */
+document.addEventListener('click', (e) => {
+  const emojis = ['🌸', '🌹', '💕', '✨', '🌺', '💗'];
+  for (let i = 0; i < 5; i++) {
+    const el = document.createElement('div');
+    el.className = 'floating-rose';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = (e.clientX + (Math.random() - 0.5) * 60) + 'px';
+    el.style.top = e.clientY + 'px';
+    el.style.fontSize = (1 + Math.random()) + 'rem';
+    el.style.animationDuration = (2 + Math.random() * 2) + 's';
+    document.body.appendChild(el);
+    el.addEventListener('animationend', () => el.remove());
+  }
+});
+</script>
+</body>
+</html>
